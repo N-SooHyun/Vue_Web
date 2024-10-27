@@ -4,7 +4,7 @@
         class="title-input"
         v-model="inputTitle"
         @input="handleTitleInput"
-        placeholder="제목을 작성하세요..." 
+        placeholder="제목을 작성하세요..."
         type="text"
       />
       <textarea 

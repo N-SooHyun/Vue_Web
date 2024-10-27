@@ -47,9 +47,16 @@
           console.log(result);
 
           const token = result.token; //토큰 추출
-          console.log('받은 토큰: ',token); //토큰 로그 출력
-          localStorage.setItem('token', token);  //토큰을 저장
-          //이후 필요한 경우 이 토큰을 이용해 API요청등을 진행
+          //console.log('받은 토큰: ',token); //토큰 로그 출력
+          if (token) { 
+            localStorage.setItem('token', token);  // 토큰을 저장
+            console.log('저장된 토큰:', localStorage.getItem('token')); // 로컬스토리지 확인
+          } else {
+            console.error('토큰 값이 유효하지 않습니다.');
+          }
+          
+          this.$emit('loginSuccess',token);
+          this.$emit('close');//로그인창 닫기
           
         } else {
           alert('로그인 실패');

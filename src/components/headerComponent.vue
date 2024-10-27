@@ -1,13 +1,22 @@
 <template>
     <header class="header">
-        <h1>Header Component</h1>
+        <h1>
+            <span class="logoHome" @click="goHome">
+                Vue를 이용한 포트폴리오
+            </span>
+        </h1>
     </header>
 </template>
 
 
 <script>
 export default{
-    name : 'headerComponent'
+    name : 'headerComponent',
+    methods : {
+        goHome(){
+            window.location.href = '/';
+        }
+    }
 };
 </script>
 
@@ -18,5 +27,9 @@ export default{
   padding: 1px;
   text-align: center;
   font-size: 10px;
+}
+
+.logoHome {
+    cursor: pointer;
 }
 </style>

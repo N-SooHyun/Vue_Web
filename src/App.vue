@@ -1,17 +1,22 @@
 <template>
   <header-component></header-component>
-      <nav-component @postWrite="switchToPostWrite" @loginClick="openLoginModal"></nav-component>
+      <nav-component 
+      :userCK="userCK" 
+      @postWrite="postModeChange('write')" 
+      @loginClick="openLoginModal"
+      @logOut="logOutFun">
+    </nav-component>
       <div class="container">
           <aside id="postListArea">
               <post-list-component></post-list-component>
           </aside>
           <section id="postContentArea">
-              <component :is="currentPostComponent"></component>
+              <post-component :mode="postMode"></post-component>
           </section>
       </div>
   <footer-component></footer-component>
 
-  <login-modal v-if="isLoginModalVisible" @close="closeLoginModal"></login-modal>
+  <login-modal v-if="isLoginModalVisible" @close="closeLoginModal" @loginSuccess="loginSuccess"></login-modal>
 </template>
 
 <script>
@@ -20,7 +25,6 @@ import NavComponent from './components/navComponent.vue';
 import PostListComponent from './components/postListComponent.vue';
 import PostComponent from './components/postComponent.vue';
 import FooterComponent from './components/footerComponent.vue';
-import postWriteComponent from './components/postWriteComponent.vue';
 import LoginModal from './components/LoginModal.vue';
 
 export default {
@@ -31,20 +35,37 @@ export default {
     PostListComponent,
     PostComponent,
     FooterComponent,
-    postWriteComponent,
     LoginModal,
   },
   data(){
     return {
       //현재 상태에 따라 랜더링할 컴포넌트를 변경하는 변수 
-      currentPostComponent: 'postComponent',
+      postMode: 'home',   //postMode(home-default, read, write)
       isLoginModalVisible: false,
+      tokenValue: null,   //토큰값 로그인 했는지 확인 가능
+      userCK: false,    //로그인 체크 기본값 false
     };
+  },
+  created(){//새로고침시
+    const storedToken = localStorage.getItem('token');
+    if(storedToken){
+      this.tokenValue = storedToken;
+      this.userCK = true;
+    }
   },
   methods:{
     //nav에서 글작성 버튼 눌렀을때 호출되는 메소드
-    switchToPostWrite(){
-      this.currentPostComponent = 'postWriteComponent';
+    logOutFun(){//토큰 반납
+      localStorage.removeItem('token');
+      alert('로그아웃 완료');
+      this.userCK = false;
+    },
+    loginSuccess(token){
+      this.tokenValue = token;//토큰 부모 컴포넌트 변수에 저장
+      this.userCK = true; //로그인이 되어있음을 체크
+    },
+    postModeChange(data){
+      this.postMode = data; //read, write형태로 받아서 처리
     },
     openLoginModal(){
       this.isLoginModalVisible = true;

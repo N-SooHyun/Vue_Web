@@ -1,7 +1,8 @@
 <template>
     <div id="nav">
-        <button @click="$emit('loginClick')" class="btn btn-primary">로그인</button>
-        <button @click="postWrite" class="btn btn-primary">글작성</button>
+        <button v-if="!userCK" @click="$emit('loginClick')" class="btn btn-primary">로그인</button>
+        <button v-if="userCK" @click="$emit('logOut')" class="btn btn-primary">로그아웃</button>
+        <button v-if="userCK" @click="postWriteBtn" class="btn btn-primary">글작성</button>
     </div>
 </template>
 
@@ -11,10 +12,19 @@ export default{
     name: 'navComponent',
     methods:{
         //버튼 클릭 시 부모 컴포넌트에 이벤트를 전달
-        postWrite(){
+        postWriteBtn(){
             this.$emit('postWrite');
         },
+        logOut(){//로그아웃 버튼 클릭시
+            
+        },
     },
+    props: {
+        userCK: {
+            type: Boolean,
+            default: false,
+        }
+    }
 };
 </script>
 
