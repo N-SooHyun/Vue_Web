@@ -34,6 +34,14 @@
       handleContentInput() {
         this.$emit('updateContent', this.inputContent);  
       },
+      //busImageMap 처리
+      receiveImages(busImageMap){
+        const newImagesHtml = Array.from(busImageMap.entries())
+        .map(([key]) => `<p><img id="${key}"/></p>`)
+        .join('');
+        this.inputContent += newImagesHtml;
+        busImageMap.clear();
+      },
     },
     watch: {
       // 부모로부터 전달받은 제목이 변경되면 업데이트
@@ -48,6 +56,10 @@
     props: {
       title: String,    // 부모로부터 전달받은 제목
       content: String,  // 부모로부터 전달받은 본문 내용
+      imageMap: {   //부모로부터 전달받은 이미지 Map
+        type: Object,
+        required: true,
+      },
     },
   };
   </script>

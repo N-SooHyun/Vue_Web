@@ -3,30 +3,29 @@
       <div class="layout">
         <!-- 왼쪽: HtmlWrite 컴포넌트 -->
         <div class="leftArea">
-          <html-write @updateContent="updateContent" @updateTitle="updateTitle" :content="content" :title="title" />
+          <html-write ref="htmlWrite" @updateContent="updateContent" @updateTitle="updateTitle" :content="content" :title="title" :imageMap="imageMap"/>
         </div>
         <!-- 오른쪽: HtmlRead 컴포넌트 -->
         <div class="rightArea">
-          <html-read :content="content" :title="title" />
+          <html-read :content="content" :title="title" :imageMap="imageMap"/>
         </div>
       </div>
-
+      
+      
+      <!--이미지 업로드 영역-->
+      <input ref="fileInput" type="file" @change="handleFileUpload" multiple accept=".jpg, .jpeg, .png, .gif, .bmp, .webp"/>
+      <button @click="applyImagesToContent">이미지 글에 적용</button>
+      <button >글쓰기</button>
+      
       <!--이미지 미리보기 영역-->
-      <div id="imagePreviewsArea" v-if="imagePreviews.length">
-        <p>이미지 미리보기:</p>
+      <div v-if="imagePreviews.length" class="image-preview">
         <ul>
           <li v-for="(image, index) in imagePreviews" :key="index">
             <img :src="image" alt="Uploaded Image" width="100" />
             <button @click="removeImage(index)">X</button>
           </li>
-        </ul>
+        </ul> 
       </div>
-
-      <!--이미지 업로드 영역-->
-      <input type="file" @change="handleFileUpload" multiple accept=".jpg, .jpeg, .png, .gif, .bmp, .webp"/>
-      <button @click="applyImagesToContent">이미지 글에 적용</button>
-      <button >글쓰기</button>
-      
     </div>
 </template>
   
@@ -44,25 +43,46 @@
         title: "",    // 입력한 제목
         content: "",  // 입력한 본문 내용
         imagePreviews: [], //이미지 미리보기 URL 배열
-        imageData: {},
+        fileList: [], 
+        imageMap: new Map(),    // 이미지고유값(키):인코딩링크값(밸류)
+        busImageMap: new Map(), // 자식에게 전달할 imageMap버스
+        nextImageId: 0,         //이미지 고유값관리 ID값 변수
       };
     },
     methods: {
       //이미지를 글에 적용시키기
       applyImagesToContent(){
-        this.imagePreviews.forEach((image, index) => {
-          const imageID = `image-${index+1}`;  //고유 ID생성
-          // 이미지 태그로 `content`를 업데이트하여 htmlRead로 전달
-          this.content += `<p><img data-id="${imageID}" alt="Image Preview"/></p>`; 
-          this.imageData[imageID] = image;  //ID와 인코딩된 이미지 URL을 매핑
+        if(this.imagePreviews.length === 0){
+          alert("올릴 이미지를 선택해주세요");
+          return;
+        }
+        //이미지 Map 생성
+        this.imagePreviews.forEach((image) => {
+          this.imageMap.set(`image-${this.nextImageId}`,image);
+          this.busImageMap.set(`image-${this.nextImageId++}`,image);
         });
+
+        //자식 컴포넌트에게 busImageMpa전달
+        this.$refs.htmlWrite.receiveImages(this.busImageMap);
+        
+        //imageMap이 업데이트 되었기에 자동으로 자식에게 전달됨
+        this.resetImagePreviewsAndFiles();
       },
 
-      // 왼쪽에서 입력한 제목을 업데이트
+      //미리보기와 파일 리스트 초기화 메서드
+      resetImagePreviewsAndFiles(){
+        this.imagePreviews = [];
+        const dataTransfer = new DataTransfer();
+        this.fileList = dataTransfer.files;
+
+        this.$refs.fileInput.files=this.fileList;
+      },
+
+      // leftWrite -> rightRead Update_title
       updateTitle(newTitle) {
         this.title = newTitle;
       },
-      // 왼쪽에서 입력한 본문을 업데이트
+      // leftWrite -> rightRead Update_content
       updateContent(newContent) {
         this.content = newContent;
       },
@@ -70,23 +90,33 @@
       handleFileUpload(event){
         const files = event.target.files;
         this.imagePreviews = [];  //기존 미리보기 초기화
+        this.fileList = files;  //파일 리스트 업데이트
 
-        Array.from(files).forEach((file, index) => {
-          //FileReader를 이용해 이미지 URL생성 및 미리보기
+        Array.from(files).forEach(file => {
           const reader = new FileReader();
+
           reader.onload = (e) => {
-            this.imagePreviews.push(e.target.result); //미리보기 URL저장
-            const imageID = `image-${index + 1}`;  //고유 ID 생성
-            this.imageData.set(imageID, e.target.result);  //ID와 인코딩된 이미지 URL을 MAP에 저장 
+            this.imagePreviews.push(e.target.result); //previewImage base64 URL array add
           };
-          //이미지를 base64 형식으로 인코딩
-          reader.readAsDataURL(file); 
+          reader.readAsDataURL(file); //file base64 incoding
         });
       },
       removeImage(index){
         //특정 인덱스의 이미지를 미리보기에서 제거
-        this.imagePreviews.splice(index, 1);
+        this.imagePreviews.splice(index, 1);  
+
+        //새 DataTransfer 객체 생성 후 파일 업데이트
+        const dataTransfer = new DataTransfer();
+        Array.from(this.fileList).forEach((file, i) => {
+          if(i !== index) {
+            dataTransfer.items.add(file);
+          }
+        });
+        this.fileList = dataTransfer.files;
+
+        this.$refs.fileInput.files = this.fileList;        
       },
+      
     },
   };
   </script>
@@ -108,6 +138,7 @@
   border: 1px solid #ccc;
   background-color: #f9f9f9;
   box-sizing: border-box;  /* padding, border가 width, height에 포함되도록 함 */
+  overflow-y: auto;
 }
 
 .rightArea {
@@ -116,5 +147,7 @@
   border: 1px solid #ccc;
   background-color: #fff;
   box-sizing: border-box;  /* padding, border가 width, height에 포함되도록 함 */
+  overflow-x: auto;
+  white-space: nowrap;
 }
 </style>
