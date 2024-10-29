@@ -11,11 +11,10 @@
         </div>
       </div>
       
-      
       <!--이미지 업로드 영역-->
       <input ref="fileInput" type="file" @change="handleFileUpload" multiple accept=".jpg, .jpeg, .png, .gif, .bmp, .webp"/>
       <button @click="applyImagesToContent">이미지 글에 적용</button>
-      <button >글쓰기</button>
+      <button @click="postWrite_server">글쓰기</button>
       
       <!--이미지 미리보기 영역-->
       <div v-if="imagePreviews.length" class="image-preview">
@@ -116,7 +115,53 @@
 
         this.$refs.fileInput.files = this.fileList;        
       },
-      
+      ImageLinkParse(){
+        
+      },
+
+      //서버에 포스트의 내용을 보내는 메소드
+      async postWrite_server(){
+        //이미지 링크 추출 배열
+        const imageLinks = [];
+        const regex = /<img id="(.*?)"\s*\/?>/g; // <img> 태그의 id를 추출하기 위한 정규식
+        let match;
+
+        // content에서 모든 <img> 태그의 id를 찾아서 링크를 추출
+        while ((match = regex.exec(this.content)) !== null) {
+            const imgId = match[1]; // id 추출
+            if (this.imageMap.has(imgId)) {
+                imageLinks.push(this.imageMap.get(imgId)); // 해당 링크 추가
+            }
+        }
+
+        const postWriteData = {
+          postTitle: this.title,
+          postContent: this.content,
+          postImgLink: imageLinks, //추출한 이미지 링크 배열
+        };
+
+        try{
+          //Fetch API를 이용한 POST요청
+          const response = await fetch('http://119.197.155.172:50052/api/postWrite', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(postWriteData) //JSON으로 변환하여 전송
+          });
+          
+          //이후 서버의 응답 처리
+          if(response.ok){
+            const result = await response.json();
+            alert('게시글 작성 완료!');
+            console.log(result);
+          }
+
+        }catch(error){
+          console.error('에러 발생:',error);
+          alert('게시글 작성중 에러 발생');
+        }
+      },
     },
   };
   </script>

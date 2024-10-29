@@ -1,8 +1,8 @@
 <template>
     <div id="nav">
-        <button v-if="!userCK" @click="$emit('loginClick')" class="btn btn-primary">로그인</button>
-        <button v-if="userCK" @click="$emit('logOut')" class="btn btn-primary">로그아웃</button>
-        <button v-if="userCK" @click="postWriteBtn" class="btn btn-primary">글작성</button>
+        <button id="loginBtn" v-if="!userCK" @click="$emit('loginClick')" class="btn btn-primary">로그인</button>
+        <button id="logoutBtn" v-if="userCK" @click="$emit('logOut')" class="btn btn-primary">로그아웃</button>
+        <button id="postWriteBtn" v-if="userCK" @click="postWriteBtn" class="btn btn-primary">글작성</button>
     </div>
 </template>
 
@@ -33,4 +33,8 @@ export default{
 #nav {
     text-align: right;
 }
+#loginBtn, #logoutBtn, #postWriteBtn{
+    margin: 0.5rem;
+}
+
 </style>
