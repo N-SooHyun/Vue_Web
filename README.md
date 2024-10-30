@@ -81,7 +81,7 @@ createApp(App).mount('#app');
  - Post: 글 내용 표시
  - Footer: 법적 필수 내용표시 영역
 이렇게 5가지의 레이아웃을 구성해주고 이를 좀더 구조화 시키기 위해 이 레이아웃 영역은
-```
+```html
 <header-component></header-component>
 <nav-component></nav-component>
 <div class = "container"> 
