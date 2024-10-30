@@ -60,7 +60,7 @@
           this.imageMap.set(`image-${this.nextImageId}`,image);
           this.busImageMap.set(`image-${this.nextImageId++}`,image);
         });
-
+        
         //자식 컴포넌트에게 busImageMpa전달
         this.$refs.htmlWrite.receiveImages(this.busImageMap);
         
@@ -92,12 +92,10 @@
         this.fileList = files;  //파일 리스트 업데이트
 
         Array.from(files).forEach(file => {
-          const reader = new FileReader();
+          const imageUrl = URL.createObjectURL(file); //이미지 파일 경로 생성(보안때문에 브라우저가 찾을 경로 대신 찾아주는 URL객체)
 
-          reader.onload = (e) => {
-            this.imagePreviews.push(e.target.result); //previewImage base64 URL array add
-          };
-          reader.readAsDataURL(file); //file base64 incoding
+          //미리보기 이미지 배열에 경로 추가
+          this.imagePreviews.push(imageUrl);
         });
       },
       removeImage(index){
@@ -122,32 +120,33 @@
       //서버에 포스트의 내용을 보내는 메소드
       async postWrite_server(){
         //이미지 링크 추출 배열
-        const imageLinks = [];
         const regex = /<img id="(.*?)"\s*\/?>/g; // <img> 태그의 id를 추출하기 위한 정규식
         let match;
+        
+        //이미지 링크는 단순 클라이언트측에서만 유용한 링크이기에 서버로 파일을 보내주는 FormData를 사용해야함
+        const formData = new FormData();
+
+        formData.append('postTitle', this.title);
+        formData.append('postContent',this.content);
 
         // content에서 모든 <img> 태그의 id를 찾아서 링크를 추출
         while ((match = regex.exec(this.content)) !== null) {
-            const imgId = match[1]; // id 추출
-            if (this.imageMap.has(imgId)) {
-                imageLinks.push(this.imageMap.get(imgId)); // 해당 링크 추가
-            }
-        }
+          const imgId = match[1]; // id 추출
+          if (this.imageMap.has(imgId)) {
+            const fileUrl = this.imageMap.get(imgId);   //해당 ID의 이미지 경로를 가져옴
+            const fileBlob = await fetch(fileUrl).then(res => res.blob());  //Blob객체로 변환(경로를 통해서 실제 이미지 파일을 바이너리로 변환)
 
-        const postWriteData = {
-          postTitle: this.title,
-          postContent: this.content,
-          postImgLink: imageLinks, //추출한 이미지 링크 배열
-        };
+            //파일 Blob 추가 FormData객체는 딕셔너리 구조이기에 'images'가 키 ,fileBlob,imgId가 밸류이다.
+            //value가 2개이니 { key:[{key:value},{key:value}]} 이런느낌의 json형식임
+            formData.append('files', fileBlob, imgId);
+          }
+        }
 
         try{
           //Fetch API를 이용한 POST요청
           const response = await fetch('http://119.197.155.172:50052/api/postWrite', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(postWriteData) //JSON으로 변환하여 전송
+            body: formData
           });
           
           //이후 서버의 응답 처리
@@ -155,8 +154,9 @@
             const result = await response.json();
             alert('게시글 작성 완료!');
             console.log(result);
+          }else{
+            console.error('서버 응답 에러:',response.statusText);
           }
-
         }catch(error){
           console.error('에러 발생:',error);
           alert('게시글 작성중 에러 발생');
