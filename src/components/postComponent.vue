@@ -6,7 +6,7 @@
             저는 이거 만들었다
         </div>
         <post-read-component v-if="mode === 'read'"></post-read-component>
-        <post-write-component v-if="mode === 'write'"></post-write-component>
+        <post-write-component v-if="mode === 'write'" @request_logout="token_logout"></post-write-component>
     </div>
     
 </template>
@@ -16,7 +16,7 @@
 import PostReadComponent from './postReadComponent.vue';
 import PostWriteComponent from './postWriteComponent.vue';
 
-export default{
+export default {
     components:{
         PostReadComponent,
         PostWriteComponent,
@@ -25,6 +25,12 @@ export default{
         mode:{//home-(default), read, write
             type: String,   
             default: 'home',
+        },
+    },
+    methods: {
+        token_logout(){
+            console.log('token_logout 호출됨');
+            this.$emit('logout');
         },
     },
 };

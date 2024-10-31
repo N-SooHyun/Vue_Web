@@ -125,7 +125,7 @@
         
         //이미지 링크는 단순 클라이언트측에서만 유용한 링크이기에 서버로 파일을 보내주는 FormData를 사용해야함
         const formData = new FormData();
-
+        
         formData.append('postTitle', this.title);
         formData.append('postContent',this.content);
 
@@ -142,10 +142,16 @@
           }
         }
 
+        const token = localStorage.getItem('token');
+        
         try{
           //Fetch API를 이용한 POST요청
           const response = await fetch('http://119.197.155.172:50052/api/postWrite', {
             method: 'POST',
+            headers: {
+              //HTTP규격에서 사용되는 사용자 인증용 Authorization헤더이며 Bearer뒤 토큰을 붙여야 쉬운 인증구분이 가능
+              'Authorization':  `Bearer ${token}`,
+            },
             body: formData
           });
           
@@ -154,12 +160,15 @@
             const result = await response.json();
             alert('게시글 작성 완료!');
             console.log(result);
+            window.location.href = '/';
           }else{
             console.error('서버 응답 에러:',response.statusText);
+            alert('세션이 만료되었습니다. 다시 로그인하세요');
+            this.$emit('request_logout'); //로그아웃 요청
           }
         }catch(error){
           console.error('에러 발생:',error);
-          alert('게시글 작성중 에러 발생');
+          alert('서버와의 연동 불가능');
         }
       },
     },

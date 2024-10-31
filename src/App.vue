@@ -11,7 +11,7 @@
               <post-list-component></post-list-component>
           </aside>
           <section id="postContentArea">
-              <post-component :mode="postMode"></post-component>
+              <post-component :mode="postMode" @logout="token_out_logout" ></post-component>
           </section>
       </div>
   <footer-component></footer-component>
@@ -55,10 +55,16 @@ export default {
   },
   methods:{
     //nav에서 글작성 버튼 눌렀을때 호출되는 메소드
+    token_out_logout(){//세션 종료 토큰 반납
+      localStorage.removeItem('token');
+      this.userCK = false;
+      window.location.href = '/';
+    },
     logOutFun(){//토큰 반납
       localStorage.removeItem('token');
       alert('로그아웃 완료');
       this.userCK = false;
+      window.location.href = '/';
     },
     loginSuccess(token){
       this.tokenValue = token;//토큰 부모 컴포넌트 변수에 저장
