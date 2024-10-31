@@ -3,7 +3,10 @@
 ## 목차
 - [초기설정](#초기설정)
 - [구조설정](#구조설정)
-- [셋째 날](#셋째-날)
+- [nav컴포넌트](#nav컴포넌트)
+- [post컴포넌트](#post컴포넌트)
+- [사용자인증](#사용자인증)
+- [HTTP프로토콜](#HTTP프로토콜)
 
 ---
 
@@ -96,11 +99,17 @@ Vue는 말 그대로 SPA를 지원하기에 App.vue한개를 가지고 index.htm
 
 그래서 App.vue는 여러 페이지를 SPA로 구현하기 위해 하나의 트리구조로써 부모-자식-손자 라는 컴포넌트 구조를 가지고 있습니다.
 
+### HTTP프로토콜
+Fetch API와 Axios라는 두 개의 방식을 이용해 HTTP문서를 전송할것이다.
 
-### nav 컴포넌트
+### 사용자인증
+토큰을 이용한 방식으로 사용자 인증을 진행할것이다.
+
+
+### nav컴포넌트
 nav컴포넌트에 로그인 버튼을 이용하여 사용자 인증을 구성합니다.
 
-### post 컴포넌트
+### post컴포넌트
 post컴포넌트에 게시글작성과 게시글 읽기 로직을 구현합니다.
 ``` html
 <post-read-component v-if="mode === 'read'"></post-read-component>
@@ -110,9 +119,9 @@ post컴포넌트에 게시글작성과 게시글 읽기 로직을 구현합니�
   - postRead컴포넌트
   - postWrite컴포넌트
 
-### postRead컴포넌트
+#### postRead컴포넌트
 
-### postWrite컴포넌트
+#### postWrite컴포넌트
   - postWrite컴포넌트의 자식 컴포넌트:
     - htmlWrite컴포넌트
     - htmlRead컴포넌트 
