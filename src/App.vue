@@ -8,10 +8,10 @@
     </nav-component>
       <div class="container">
           <aside id="postListArea">
-              <post-list-component></post-list-component>
+              <post-list-component @post_Read_Data="handlePostSelected"></post-list-component>
           </aside>
           <section id="postContentArea">
-              <post-component :mode="postMode" @logout="token_out_logout" ></post-component>
+              <post-component :mode="postMode" :postData="selectedPostData" @logout="token_out_logout" ></post-component>
           </section>
       </div>
   <footer-component></footer-component>
@@ -44,6 +44,7 @@ export default {
       isLoginModalVisible: false,
       tokenValue: null,   //토큰값 로그인 했는지 확인 가능
       userCK: false,    //로그인 체크 기본값 false
+      selectedPostData: null
     };
   },
   created(){//새로고침시
@@ -51,9 +52,14 @@ export default {
     if(storedToken){
       this.tokenValue = storedToken;
       this.userCK = true;
+      this.postMode = 'home';
     }
   },
   methods:{
+    handlePostSelected(postData){
+      this.selectedPostData = postData;
+      this.postMode = 'read';
+    },
     //nav에서 글작성 버튼 눌렀을때 호출되는 메소드
     token_out_logout(){//세션 종료 토큰 반납
       localStorage.removeItem('token');

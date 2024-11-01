@@ -31,6 +31,7 @@
   <script>
   import HtmlWrite from './htmlWrite.vue';
   import HtmlRead from './htmlRead.vue';
+//import { registerRuntimeCompiler } from 'vue';
   
   export default {
     components: {
@@ -46,6 +47,7 @@
         imageMap: new Map(),    // 이미지고유값(키):인코딩링크값(밸류)
         busImageMap: new Map(), // 자식에게 전달할 imageMap버스
         nextImageId: 0,         //이미지 고유값관리 ID값 변수
+        imageUrl: null,  //image경로를 data속성으로 관리 나중에 해제를 위해서
       };
     },
     methods: {
@@ -92,10 +94,10 @@
         this.fileList = files;  //파일 리스트 업데이트
 
         Array.from(files).forEach(file => {
-          const imageUrl = URL.createObjectURL(file); //이미지 파일 경로 생성(보안때문에 브라우저가 찾을 경로 대신 찾아주는 URL객체)
+          this.imageUrl = URL.createObjectURL(file); //이미지 파일 경로 생성(보안때문에 브라우저가 찾을 경로 대신 찾아주는 URL객체)
 
           //미리보기 이미지 배열에 경로 추가
-          this.imagePreviews.push(imageUrl);
+          this.imagePreviews.push(this.imageUrl);
         });
       },
       removeImage(index){
@@ -122,6 +124,17 @@
         //이미지 링크 추출 배열
         const regex = /<img id="(.*?)"\s*\/?>/g; // <img> 태그의 id를 추출하기 위한 정규식
         let match;
+
+        console.log(`${this.title.length}`);
+        console.log(`${this.content.length}`);
+
+        if(this.title.length == 0){
+          alert('글 제목이 없습니다.');
+          return;
+        }else if(this.content.length == 0){
+          alert('글 내용이 없습니다.');
+          return;
+        }
         
         //이미지 링크는 단순 클라이언트측에서만 유용한 링크이기에 서버로 파일을 보내주는 FormData를 사용해야함
         const formData = new FormData();
@@ -136,9 +149,14 @@
             const fileUrl = this.imageMap.get(imgId);   //해당 ID의 이미지 경로를 가져옴
             const fileBlob = await fetch(fileUrl).then(res => res.blob());  //Blob객체로 변환(경로를 통해서 실제 이미지 파일을 바이너리로 변환)
 
-            //파일 Blob 추가 FormData객체는 딕셔너리 구조이기에 'images'가 키 ,fileBlob,imgId가 밸류이다.
-            //value가 2개이니 { key:[{key:value},{key:value}]} 이런느낌의 json형식임
-            formData.append('files', fileBlob, imgId);
+            //파일 Blob 추가 FormData객체는 딕셔너리 구조이기에 'images'가 키 ,fileBlob가 밸류이다.
+            //단 formData.append('files', fileBlob, imgId); 이런식으로 접근하면 json형식이 {'files':[{fileBlob:imgId}]} 이렇게 되는게 아닌 
+            //{'files':[<fileBlob>]} 이렇게되고 imgId는 단순히 fileBlob를 설명하는 단순한 메타데이터에 그친다.
+            formData.append('files', fileBlob);
+            
+            //나중에 랜더링을 위해서 ID도 별도로 추가
+            formData.append('imageIds[]', imgId);
+            
           }
         }
 
@@ -161,6 +179,11 @@
             alert('게시글 작성 완료!');
             console.log(result);
             window.location.href = '/';
+            // 업로드 완료 후 URL 해제
+            if (this.imageUrl) {
+                URL.revokeObjectURL(this.imageUrl); // URL 해제
+                this.imageUrl = null; // 변수 초기화
+            }
           }else{
             console.error('서버 응답 에러:',response.statusText);
             alert('세션이 만료되었습니다. 다시 로그인하세요');
