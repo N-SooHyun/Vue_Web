@@ -122,7 +122,7 @@
       //서버에 포스트의 내용을 보내는 메소드
       async postWrite_server(){
         //이미지 링크 추출 배열
-        const regex = /<img id="(.*?)"\s*\/?>/g; // <img> 태그의 id를 추출하기 위한 정규식
+        const regex = /<img id="([^"]+)"([^>]*)\/?>/g; // <img> 태그의 id를 추출하기 위한 정규식
         let match;
 
         console.log(`${this.title.length}`);
