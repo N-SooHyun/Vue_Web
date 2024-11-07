@@ -21,8 +21,8 @@
   export default {
     data() {
       return {
-        inputTitle: "",  // 제목 입력
-        inputContent: "",  // 본문 입력
+        inputTitle: this.title || "",  // 제목 입력
+        inputContent: this.content || "",  // 본문 입력
       };
     },
     methods: {

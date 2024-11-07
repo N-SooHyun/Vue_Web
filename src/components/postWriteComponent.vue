@@ -31,6 +31,7 @@
   <script>
   import HtmlWrite from './htmlWrite.vue';
   import HtmlRead from './htmlRead.vue';
+//import { map } from 'core-js/core/array';
 //import { registerRuntimeCompiler } from 'vue';
   
   export default {
@@ -38,16 +39,58 @@
       HtmlWrite,
       HtmlRead,
     },
+    props: {
+      newUpdatePostNo:{
+        type: Number,
+        default: -1 //기본값 설정
+      },
+      newUpdateTitle: {
+      type: String,
+      default: "" // 기본값 설정
+      },
+      newUpdateContent: {
+        type: String,
+        default: "" // 기본값 설정
+      },
+      newUpdateImages: {
+        type: Array, // 이미지 배열을 받는다고 가정
+        default: () => []// 기본값 설정
+      }
+    },
+    mounted(){
+      //props값이 제대로 전달됐는지 콘솔에 출력
+      console.log('newUpdateTitle:', this.newUpdateTitle);
+      console.log('newUpdateContent:', this.newUpdateContent);
+      console.log('newUpdateImages:', this.newUpdateImages);
+      if(this.newUpdateImages != null && this.newUpdateImages.length > 0){
+        const updatedMap = new Map(this.newUpdateImages.map(({ key, value }) => {
+          let url = value;
+
+          // value가 Blob이면 URL.createObjectURL로 URL로 변환
+          if (value instanceof Blob) {
+            url = URL.createObjectURL(value);
+          }
+
+          // key와 변환된 url을 Map에 저장
+          return [key, url];
+        }));
+
+      // 변환된 Map을 imageMap에 할당
+      this.imageMap = updatedMap;
+      this.nextImageId = this.imageMap.size;
+      }
+    },
     data() {
       return {
-        title: "",    // 입력한 제목
-        content: "",  // 입력한 본문 내용
+        title: this.newUpdateTitle || '',    // 입력한 제목
+        content: this.newUpdateContent || '',  // 입력한 본문 내용
         imagePreviews: [], //이미지 미리보기 URL 배열
         fileList: [], 
         imageMap: new Map(),    // 이미지고유값(키):인코딩링크값(밸류)
         busImageMap: new Map(), // 자식에게 전달할 imageMap버스
         nextImageId: 0,         //이미지 고유값관리 ID값 변수
         imageUrl: null,  //image경로를 data속성으로 관리 나중에 해제를 위해서
+        newImages: [],  //수정시 받을 배열형태의 id:blob 구조 변수
       };
     },
     methods: {
@@ -60,6 +103,7 @@
         //이미지 Map 생성
         this.imagePreviews.forEach((image) => {
           this.imageMap.set(`image-${this.nextImageId}`,image);
+          console.log(`imageMap에 추가된 이미지 키:${`image-${this.nextImageId}`}, 밸류:${image}`);
           this.busImageMap.set(`image-${this.nextImageId++}`,image);
         });
         
@@ -125,9 +169,6 @@
         const regex = /<img id="([^"]+)"([^>]*)\/?>/g; // <img> 태그의 id를 추출하기 위한 정규식
         let match;
 
-        console.log(`${this.title.length}`);
-        console.log(`${this.content.length}`);
-
         if(this.title.length == 0){
           alert('글 제목이 없습니다.');
           return;
@@ -148,7 +189,7 @@
           if (this.imageMap.has(imgId)) {
             const fileUrl = this.imageMap.get(imgId);   //해당 ID의 이미지 경로를 가져옴
             const fileBlob = await fetch(fileUrl).then(res => res.blob());  //Blob객체로 변환(경로를 통해서 실제 이미지 파일을 바이너리로 변환)
-
+            
             //파일 Blob 추가 FormData객체는 딕셔너리 구조이기에 'images'가 키 ,fileBlob가 밸류이다.
             //단 formData.append('files', fileBlob, imgId); 이런식으로 접근하면 json형식이 {'files':[{fileBlob:imgId}]} 이렇게 되는게 아닌 
             //{'files':[<fileBlob>]} 이렇게되고 imgId는 단순히 fileBlob를 설명하는 단순한 메타데이터에 그친다.
@@ -163,12 +204,24 @@
         const token = localStorage.getItem('token');
         
         try{
+
+          let apiUrl = '';
+          let method = '';
+
+          if(this.newUpdatePostNo === -1){//새로운 글작성
+            apiUrl = 'http://119.197.155.172:50052/api/postWrite';
+            method = 'POST'; //POST요청
+          }else if(this.newUpdatePostNo >= 0){
+            apiUrl = `http://119.197.155.172:50052/api/updatePost/${this.newUpdatePostNo}`;
+            method = 'PUT';
+          }
+
           //Fetch API를 이용한 POST요청
-          const response = await fetch('http://119.197.155.172:50052/api/postWrite', {
-            method: 'POST',
+          const response = await fetch(apiUrl, {
+            method: method,
             headers: {
               //HTTP규격에서 사용되는 사용자 인증용 Authorization헤더이며 Bearer뒤 토큰을 붙여야 쉬운 인증구분이 가능
-              'Authorization':  `Bearer ${token}`,
+              'Authorization': `Bearer ${token}`,
             },
             body: formData
           });
@@ -176,7 +229,7 @@
           //이후 서버의 응답 처리
           if(response.ok){
             const result = await response.json();
-            alert('게시글 작성 완료!');
+            alert(this.newUpdatePostNo === -1 ? '게시글 작성 완료!' : '게시글 수정 완료!');
             console.log(result);
             window.location.href = '/';
             // 업로드 완료 후 URL 해제
@@ -194,6 +247,14 @@
           alert('서버와의 연동 불가능');
         }
       },
+    },
+    unmounted() {
+      this.imageMap.forEach((url) => {
+        if(url && typeof url === 'string' && url.startsWith('blob:')){
+          URL.revokeObjectURL(url);
+          URL.revokeObjectURL(this.imageUrl);
+        }
+      });
     },
   };
   </script>

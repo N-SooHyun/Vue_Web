@@ -11,7 +11,7 @@
               <post-list-component @post_Read_Data="handlePostSelected"></post-list-component>
           </aside>
           <section id="postContentArea">
-              <post-component :mode="postMode" :postData="selectedPostData" @logout="token_out_logout" ></post-component>
+              <post-component :mode="postMode" :postData="selectedPostData" @logout="token_out_logout" @editPost="handleEditPost"></post-component>
           </section>
       </div>
   <footer-component></footer-component>
@@ -56,6 +56,9 @@ export default {
     }
   },
   methods:{
+    handleEditPost(){
+      this.postMode = 'edit';
+    },
     handlePostSelected(postData){
       this.selectedPostData = postData;
       this.postMode = 'read';

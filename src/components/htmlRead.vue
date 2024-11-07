@@ -23,6 +23,7 @@
         // content에서 <img> 태그의 id를 찾아서 src를 추가
         return this.content.replace(/<img id="([^"]+)"([^>]*)\/?>/g, (match, id, attribu) => {
         const src = this.imageMap.get(id);
+
         // src가 있으면 src 속성을 추가
         return src ? `<img id="${id}" src="${src}" ${attribu}/>` : match; // URL이 없으면 원래 태그를 그대로 반환
       });
