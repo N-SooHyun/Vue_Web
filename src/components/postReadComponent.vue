@@ -66,6 +66,7 @@ export default{
           alert('권한이 필요합니다.');
           return; 
         }       
+        
 
         try{
           //API요청을 보냅니다.
